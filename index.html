@@ -127,35 +127,6 @@
     })
     .catch(err => alert("Erreur de connexion à la base de données."));
 }
-<div id="commande-finale" class="section">
-    <h3>Validation du Panier Final</h3>
-    <p style="font-size: 0.8em; color: #666;">Prix maximum autorisé : <span id="budget-max">50.00</span> €</p>
-    
-    <div id="liste-finale">
-        <div class="piece-row fixed">
-            <span>Fixe 1: Réf 3001 (0.20€)</span>
-            <input type="number" id="qte-f1" value="1" min="0" onchange="calculerTotal()">
-        </div>
-        <div class="piece-row special">
-            <span>TOP 1: Réf 4073 (0.05€)</span>
-            <input type="number" id="qte-top" value="0" min="0" onchange="calculerTotal()">
-        </div>
-    </div>
-
-    <div style="background: #eee; padding: 15px; margin-top: 15px; border-radius: 8px;">
-        <div>Sous-total : <span id="sous-total">0.00</span> €</div>
-        <div>Frais de gestion (7%) : <span id="frais">0.00</span> €</div>
-        <div style="font-weight:bold; color:var(--lego-red); font-size: 1.2em;">
-            PRIX TOTAL : <span id="prix-final">0.00</span> €
-        </div>
-    </div>
-
-    <button id="btn-valider-final" class="btn btn-green" onclick="validerEtEnvoyer()">Valider et Envoyer Récap</button>
-</div>
-
-
-}
-
 </script>
 
 </body>
