@@ -2,93 +2,105 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Lego Club Manager - 11 Pièces</title>
+    <title>Lego Pro Manager - Commande & Admin</title>
     <style>
-        :root { --lego-red: #d1121b; --lego-blue: #0055ad; --lego-yellow: #ffcf00; --dark: #333; }
-        body { font-family: sans-serif; background: #e5e5e5; display: flex; justify-content: center; padding: 20px; }
-        .app-container { background: white; width: 100%; max-width: 450px; border-radius: 20px; border: 4px solid var(--dark); overflow: hidden; }
-        .header { background: var(--dark); color: white; padding: 15px; text-align: center; font-weight: bold; }
-        .main-menu { padding: 20px; display: grid; gap: 10px; }
-        .input-membre { padding: 12px; border: 2px solid var(--lego-blue); border-radius: 8px; margin-bottom: 10px; font-size: 1rem; }
-        .btn { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
+        :root { --lego-red: #d1121b; --lego-blue: #0055ad; --lego-yellow: #ffcf00; --dark: #222; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+        .app-container { max-width: 600px; margin: auto; background: white; border-radius: 15px; border: 5px solid var(--dark); overflow: hidden; }
+        
+        .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
+        .section { padding: 20px; display: none; }
+        .active { display: block; }
+
+        /* Style des Vignettes */
+        .piece-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 5px; background: #eee; border-radius: 8px; }
+        .vignette { width: 50px; height: 50px; background: #ddd; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+        
+        .btn { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
         .btn-blue { background: var(--lego-blue); }
-        .btn-red { background: var(--lego-red); }
-        .btn-admin { background: #555; }
-        #selection-section { display: none; padding: 20px; }
-        .piece-row { display: flex; gap: 5px; margin-bottom: 8px; }
-        input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+        .btn-green { background: #237841; }
+        .btn-admin { background: #666; }
+
+        .admin-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header">LEGO MANAGER - SESSION 2026</div>
-
-    <div id="main-menu" class="main-menu">
-        <label>Nom du Membre :</label>
-        <input type="text" id="nom-membre" class="input-membre" placeholder="Entrez votre nom...">
-        
-        <button class="btn btn-blue" onclick="ouvrirSaisie()">Choix de mes 11 Pièces</button>
-        <button class="btn btn-red" onclick="envoyerCommande()">Valider la Commande</button>
-        <button class="btn btn-admin" onclick="alert('Accès aux statistiques annuelles...')">Admin : Top 1 Membres</button>
+    <div class="header">
+        <h2>LEGO SYSTEM PRO</h2>
+        <div id="user-tag">Session : 2026</div>
     </div>
 
-    <div id="selection-section">
-        <h3 id="titre-saisie">Choix des 11 pièces</h3>
-        <div id="pieces-list"></div>
-        <button class="btn btn-blue" style="width:100%; margin-top:10px;" onclick="fermerSaisie()">Retour</button>
+    <div id="menu" class="section active">
+        <input type="text" id="member-name" placeholder="Votre Nom / Pseudo" style="width:94%; padding:15px; margin-bottom:10px;">
+        <button class="btn btn-blue" onclick="showSection('selection')">1. Sélectionner mes 11 pièces</button>
+        <button class="btn btn-green" onclick="genererBon()">2. Générer mon Bon de Commande</button>
+        <button class="btn btn-admin" onclick="checkAdmin()">Administration 🔒</button>
+    </div>
+
+    <div id="selection" class="section">
+        <h3>Ma Sélection (11 pièces)</h3>
+        <div id="list-container"></div>
+        <button class="btn btn-blue" onclick="saveSelection()">Enregistrer ma Sélection</button>
+        <button class="btn btn-admin" onclick="showSection('menu')">Retour</button>
+    </div>
+
+    <div id="admin" class="section">
+        <h3>Panneau de Contrôle Final</h3>
+        <div class="admin-controls">
+            <button class="btn btn-green" onclick="exportData()">Exporter CSV (BrickLink)</button>
+            <button class="btn btn-blue" onclick="importData()">Importer Sélection Finale</button>
+        </div>
+        <div id="stats-area" style="margin-top:20px; padding:10px; background:#f9f9f9; border:1px solid #ccc;">
+            <strong>Statistiques :</strong> <span id="total-orders">0</span> commandes en attente.
+        </div>
+        <button class="btn btn-admin" onclick="showSection('menu')">Quitter Admin</button>
     </div>
 </div>
 
 <script>
-    const listContainer = document.getElementById('pieces-list');
-    for (let i = 1; i <= 11; i++) {
-        listContainer.innerHTML += `
+    // Initialisation des 11 lignes
+    const list = document.getElementById('list-container');
+    for(let i=1; i<=11; i++) {
+        list.innerHTML += `
             <div class="piece-row">
-                <span style="width:20px">${i}</span>
-                <input type="text" placeholder="Référence" id="ref-${i}" style="flex:2">
+                <div class="vignette" id="vignette-${i}">IMG</div>
+                <input type="text" placeholder="Réf" id="ref-${i}" style="width:60px" oninput="updateVignette(${i})">
                 <select id="col-${i}" style="flex:1">
-                    <option>Rouge</option><option>Bleu</option><option>Jaune</option><option>Noir</option><option>Blanc</option>
+                    <option>Black</option><option>White</option><option>Red</option><option>Blue</option>
                 </select>
             </div>`;
     }
 
-    function ouvrirSaisie() {
-        const nom = document.getElementById('nom-membre').value;
-        if(!nom) return alert("Merci d'entrer votre nom d'abord !");
-        document.getElementById('titre-saisie').innerText = "Sélection de " + nom;
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('selection-section').style.display = 'block';
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
     }
 
-    function fermerSaisie() {
-        document.getElementById('main-menu').style.display = 'grid';
-        document.getElementById('selection-section').style.display = 'none';
+    function updateVignette(id) {
+        const ref = document.getElementById(`ref-${id}`).value;
+        const vig = document.getElementById(`vignette-${id}`);
+        if(ref.length > 2) {
+            // Ici on pourrait lier une image : bricklink.com/v2/catalog/catalogitem.page?P=${ref}
+            vig.innerHTML = `<img src="https://img.bricklink.com/ItemImage/PN/11/${ref}.png" style="width:100%" onerror="this.src='Lego'">`;
+        }
     }
 
-    function envoyerCommande() {
-        const nom = document.getElementById('nom-membre').value;
-        alert("Félicitations " + nom + " ! Tes 11 pièces sont enregistrées pour le récap annuel.");
-        // Ici, les données incluent maintenant le nom du membre
+    function checkAdmin() {
+        const p = prompt("Mot de passe :");
+        if(p === "admin123") showSection('admin');
     }
-// --- FONCTION ADMIN AVEC MOT DE PASSE ---
-function accesAdmin() {
-    const mdp = prompt("Entrez le mot de passe administrateur :");
-    if (mdp === "LEGO2026") { // Vous pourrez changer le mot de passe ici
-        showSection('admin-panel');
-    } else {
-        alert("Accès refusé.");
+
+    function genererBon() {
+        const name = document.getElementById('member-name').value;
+        if(!name) return alert("Entrez votre nom !");
+        alert("Bon de commande généré pour " + name + " (Fichier PDF/Texte prêt).");
     }
-}
 
-// --- GÉNÉRATION DU BON DE COMMANDE ---
-function genererBonCommande(membre, choixFinal) {
-    // Création d'un visuel simple à imprimer ou sauver en PDF
-    console.log("Génération du bon pour : " + membre);
-    // Cette fonction exportera les données en format texte ou PDF
-}
-
+    function exportData() {
+        alert("Exportation des données au format .CSV pour BrickLink...");
+    }
 </script>
-
 </body>
 </html>
