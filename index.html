@@ -163,6 +163,73 @@
     `);
     fenetreImpression.document.close();
 }
+<div id="commande-finale" class="section">
+    <h3>Validation du Panier Final</h3>
+    <p style="font-size: 0.8em; color: #666;">Prix maximum autorisé : <span id="budget-max">50.00</span> €</p>
+    
+    <div id="liste-finale">
+        <div class="piece-row fixed">
+            <span>Fixe 1: Réf 3001 (0.20€)</span>
+            <input type="number" id="qte-f1" value="1" min="0" onchange="calculerTotal()">
+        </div>
+        <div class="piece-row special">
+            <span>TOP 1: Réf 4073 (0.05€)</span>
+            <input type="number" id="qte-top" value="0" min="0" onchange="calculerTotal()">
+        </div>
+    </div>
+
+    <div style="background: #eee; padding: 15px; margin-top: 15px; border-radius: 8px;">
+        <div>Sous-total : <span id="sous-total">0.00</span> €</div>
+        <div>Frais de gestion (7%) : <span id="frais">0.00</span> €</div>
+        <div style="font-weight:bold; color:var(--lego-red); font-size: 1.2em;">
+            PRIX TOTAL : <span id="prix-final">0.00</span> €
+        </div>
+    </div>
+
+    <button id="btn-valider-final" class="btn btn-green" onclick="validerEtEnvoyer()">Valider et Envoyer Récap</button>
+</div>
+
+<script>
+    const FRAIS_POURCENTAGE = 0.07;
+    const BUDGET_MAX = 50.00; // À définir par l'Admin
+
+    function calculerTotal() {
+        // Exemple simplifié de calcul
+        let st = (document.getElementById('qte-f1').value * 0.20) + 
+                 (document.getElementById('qte-top').value * 0.05);
+        
+        let f = st * FRAIS_POURCENTAGE;
+        let total = st + f;
+
+        document.getElementById('sous-total').innerText = st.toFixed(2);
+        document.getElementById('frais').innerText = f.toFixed(2);
+        document.getElementById('prix-final').innerText = total.toFixed(2);
+
+        // Alerte si dépassement budget
+        const btn = document.getElementById('btn-valider-final');
+        if (total > BUDGET_MAX) {
+            btn.style.background = "#ccc";
+            btn.disabled = true;
+            btn.innerText = "Budget Dépassé !";
+        } else {
+            btn.style.background = "var(--lego-green)";
+            btn.disabled = false;
+            btn.innerText = "Valider et Envoyer Récap";
+        }
+    }
+
+    function validerEtEnvoyer() {
+        const nom = document.getElementById('member-name').value;
+        const total = document.getElementById('prix-final').innerText;
+        
+        // Simule l'envoi d'un email ou message récapitulatif
+        alert(`Récapitulatif envoyé à l'adhérent : ${nom}\nTotal : ${total} € (incluant 7% de frais)`);
+        
+        // Ici, on déclenche l'impression du bon de commande finale
+        genererBon(); 
+    }
+</script>
+
 
 </script>
 </body>
