@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lego Stock Manager</title>
+    <style>
+        :root {
+            --lego-red: #d1121b;
+            --lego-blue: #0055ad;
+            --lego-yellow: #ffcf00;
+            --lego-green: #237841;
+            --dark: #333;
+        }
+        body { font-family: 'Arial', sans-serif; background: #e5e5e5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app-container { background: white; width: 100%; max-width: 450px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; border: 4px solid var(--dark); }
+        
+        /* Header */
+        .header { background: var(--dark); color: white; padding: 15px; text-align: center; }
+        .date-display { font-weight: bold; font-size: 1.2rem; letter-spacing: 2px; }
+
+        /* Navigation Style Croquis */
+        .main-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
+        .btn { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-blue { background: var(--lego-blue); }
+        .btn-yellow { background: var(--lego-yellow); color: var(--dark); }
+        .btn-red { background: var(--lego-red); }
+        .btn-green { background: var(--lego-green); }
+        .btn-admin { grid-column: span 2; background: #555; }
+
+        /* Section Choix Pièces */
+        #selection-section { padding: 20px; display: none; }
+        .piece-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .num { width: 25px; font-weight: bold; color: var(--lego-red); }
+        input { flex: 2; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+        select { flex: 1; padding: 8px; border-radius: 5px; }
+
+        /* Admin Panel */
+        #admin-panel { padding: 20px; display: none; background: #f9f9f9; }
+        .stats-card { background: white; border: 2px solid var(--dark); padding: 15px; border-radius: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <div class="date-display" id="date-now">06 / 02 / 2026</div>
+    </div>
+
+    <div id="main-menu" class="main-menu">
+        <button class="btn btn-blue" onclick="showSection('selection-section')">Choix Pièces</button>
+        <button class="btn btn-yellow" onclick="location.reload()">Terminé</button>
+        <button class="btn btn-red" onclick="validerCommande()">Commande</button>
+        <button class="btn btn-green">Ouvert</button>
+        <button class="btn btn-admin" onclick="showSection('admin-panel')">Administration (Récap Annuel)</button>
+    </div>
+
+    <div id="selection-section">
+        <h3 style="color: var(--lego-blue)">Saisie des 11 pièces</h3>
+        <div id="pieces-list"></div>
+        <button class="btn btn-blue" style="width:100%; margin-top:15px;" onclick="showSection('main-menu')">Retour</button>
+    </div>
+
+    <div id="admin-panel">
+        <h3 style="color: var(--dark)">Récapitulatif Annuel</h3>
+        <select id="year-filter" style="width: 100%; margin-bottom: 10px;">
+            <option>2026</option>
+            <option>2025</option>
+        </select>
+        <div class="stats-card">
+            <p><strong>Total Pièces :</strong> <span id="stat-total">0</span></p>
+            <p><strong>Couleur dominante :</strong> <span id="stat-color">-</span></p>
+            <hr>
+            <p style="font-size: 0.8rem; color: #666;">Données synchronisées avec la base de données.</p>
+        </div>
+        <button class="btn btn-admin" style="width:100%; margin-top:15px;" onclick="showSection('main-menu')">Quitter Admin</button>
+    </div>
+</div>
+
+<script>
+    // Générer les 11 lignes
+    const colors = ["Rouge", "Bleu", "Jaune", "Vert", "Noir", "Blanc", "Gris"];
+    const listContainer = document.getElementById('pieces-list');
+    
+    for (let i = 1; i <= 11; i++) {
+        const row = document.createElement('div');
+        row.className = 'piece-row';
+        row.innerHTML = `
+            <span class="num">${i}</span>
+            <input type="text" placeholder="Réf. Pièce" id="ref-${i}">
+            <select id="col-${i}">
+                ${colors.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+        `;
+        listContainer.appendChild(row);
+    }
+
+    function showSection(id) {
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('selection-section').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById(id).style.display = (id === 'main-menu') ? 'grid' : 'block';
+    }
+
+    function validerCommande() {
+        alert("Commande envoyée vers la base de données !");
+        // Simulation d'ajout de stats
+        document.getElementById('stat-total').innerText = "11";
+        document.getElementById('stat-color').innerText = "Rouge (Lego Standard)";
+    }
+</script>
+
+</body>
+</html>
