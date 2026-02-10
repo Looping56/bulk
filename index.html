@@ -2,97 +2,76 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionnaire de Pièces Lego</title>
+    <title>Lego Club Manager - 11 Pièces</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 350px;
-            border-top: 8px solid #d1121b; /* Rouge Lego */
-        }
-
-        .header-date {
-            border: 2px solid #333;
-            padding: 10px;
-            margin-bottom: 25px;
-            text-align: center;
-            font-weight: bold;
-            border-radius: 5px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s;
-            text-align: center;
-            text-transform: uppercase;
-            font-size: 0.85em;
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Couleurs inspirées de Lego */
-        .btn-blue { background-color: #0055ad; color: white; } /* Choix Pièces */
-        .btn-yellow { background-color: #ffcf00; color: #333; } /* Terminé */
-        .btn-red { background-color: #d1121b; color: white; } /* Commande */
-        .btn-green { background-color: #237841; color: white; } /* Ouvert */
-        .btn-admin { 
-            grid-column: span 2; 
-            background-color: #333; 
-            color: white; 
-            margin-top: 10px;
-        }
-
-        .status-tag {
-            font-size: 0.7em;
-            display: block;
-            margin-top: 5px;
-        }
+        :root { --lego-red: #d1121b; --lego-blue: #0055ad; --lego-yellow: #ffcf00; --dark: #333; }
+        body { font-family: sans-serif; background: #e5e5e5; display: flex; justify-content: center; padding: 20px; }
+        .app-container { background: white; width: 100%; max-width: 450px; border-radius: 20px; border: 4px solid var(--dark); overflow: hidden; }
+        .header { background: var(--dark); color: white; padding: 15px; text-align: center; font-weight: bold; }
+        .main-menu { padding: 20px; display: grid; gap: 10px; }
+        .input-membre { padding: 12px; border: 2px solid var(--lego-blue); border-radius: 8px; margin-bottom: 10px; font-size: 1rem; }
+        .btn { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
+        .btn-blue { background: var(--lego-blue); }
+        .btn-red { background: var(--lego-red); }
+        .btn-admin { background: #555; }
+        #selection-section { display: none; padding: 20px; }
+        .piece-row { display: flex; gap: 5px; margin-bottom: 8px; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header-date">
-        DATE : <span id="current-date">06/02/2026</span>
+<div class="app-container">
+    <div class="header">LEGO MANAGER - SESSION 2026</div>
+
+    <div id="main-menu" class="main-menu">
+        <label>Nom du Membre :</label>
+        <input type="text" id="nom-membre" class="input-membre" placeholder="Entrez votre nom...">
+        
+        <button class="btn btn-blue" onclick="ouvrirSaisie()">Choix de mes 11 Pièces</button>
+        <button class="btn btn-red" onclick="envoyerCommande()">Valider la Commande</button>
+        <button class="btn btn-admin" onclick="alert('Accès aux statistiques annuelles...')">Admin : Top 1 Membres</button>
     </div>
 
-    <div class="grid">
-        <button class="btn btn-blue">Choix Pièces</button>
-        <button class="btn btn-yellow">Terminé</button>
-        <button class="btn btn-red">Commande</button>
-        <button class="btn btn-green">
-            Ouvert
-            <span class="status-tag">● Session active</span>
-        </button>
-        <button class="btn btn-admin">Administration</button>
+    <div id="selection-section">
+        <h3 id="titre-saisie">Choix des 11 pièces</h3>
+        <div id="pieces-list"></div>
+        <button class="btn btn-blue" style="width:100%; margin-top:10px;" onclick="fermerSaisie()">Retour</button>
     </div>
 </div>
 
+<script>
+    const listContainer = document.getElementById('pieces-list');
+    for (let i = 1; i <= 11; i++) {
+        listContainer.innerHTML += `
+            <div class="piece-row">
+                <span style="width:20px">${i}</span>
+                <input type="text" placeholder="Référence" id="ref-${i}" style="flex:2">
+                <select id="col-${i}" style="flex:1">
+                    <option>Rouge</option><option>Bleu</option><option>Jaune</option><option>Noir</option><option>Blanc</option>
+                </select>
+            </div>`;
+    }
+
+    function ouvrirSaisie() {
+        const nom = document.getElementById('nom-membre').value;
+        if(!nom) return alert("Merci d'entrer votre nom d'abord !");
+        document.getElementById('titre-saisie').innerText = "Sélection de " + nom;
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('selection-section').style.display = 'block';
+    }
+
+    function fermerSaisie() {
+        document.getElementById('main-menu').style.display = 'grid';
+        document.getElementById('selection-section').style.display = 'none';
+    }
+
+    function envoyerCommande() {
+        const nom = document.getElementById('nom-membre').value;
+        alert("Félicitations " + nom + " ! Tes 11 pièces sont enregistrées pour le récap annuel.");
+        // Ici, les données incluent maintenant le nom du membre
+    }
+</script>
 
 </body>
 </html>
