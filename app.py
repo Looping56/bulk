@@ -85,3 +85,21 @@ def dashboard():
 
 if __name__ == '__main__':
     app.run(debug=True)
+@app.route('/admin/stats_experts')
+def stats_experts():
+    conn = get_db()
+    # Calcule le cumul par membre et le montant moyen des frais générés
+    query = """
+        SELECT 
+            membre, 
+            COUNT(id) as nb_commandes,
+            SUM(sous_total) as total_achats,
+            SUM(frais) as total_frais_generes
+        FROM commandes 
+        GROUP BY membre 
+        ORDER BY total_frais_generes DESC
+    """
+    stats = conn.execute(query).fetchall()
+    conn.close()
+    return jsonify([dict(s) for s in stats])
+
