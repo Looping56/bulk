@@ -227,7 +227,24 @@
         // Ici, on déclenche l'impression du bon de commande finale
         genererBon(); 
     }
-</script>
+
+<div class="card" style="border-left: 5px solid var(--lego-yellow);">
+    <h3>📊 Statistiques de la Session 2026</h3>
+    <div id="stats-summary" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center;">
+        <div style="background:#f9f9f9; padding:15px; border-radius:10px;">
+            <small>Total Collecté (Frais 7%)</small>
+            <div id="total-frais-club" style="font-size:1.5em; font-weight:bold; color:var(--lego-blue);">0.00 €</div>
+        </div>
+        <div style="background:#f9f9f9; padding:15px; border-radius:10px;">
+            <small>Volume d'Achat Global</small>
+            <div id="volume-global" style="font-size:1.5em; font-weight:bold;">0.00 €</div>
+        </div>
+        <div style="background:#f9f9f9; padding:15px; border-radius:10px;">
+            <small>Membre le plus Actif</small>
+            <div id="top-membre" style="font-size:1.1em; font-weight:bold; color:var(--lego-red);">--</div>
+        </div>
+    </div>
+</div>
 
 
 </script>
