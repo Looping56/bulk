@@ -2,251 +2,155 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Lego Pro Manager - Commande & Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEGO Club Manager Pro - 2026</title>
     <style>
-        :root { --lego-red: #d1121b; --lego-blue: #0055ad; --lego-yellow: #ffcf00; --dark: #222; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-        .app-container { max-width: 600px; margin: auto; background: white; border-radius: 15px; border: 5px solid var(--dark); overflow: hidden; }
+        :root { --lego-red: #d1121b; --lego-blue: #0055ad; --lego-yellow: #ffcf00; --dark: #222; --gray: #f4f4f4; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--gray); margin: 0; color: #333; }
         
-        .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
-        .section { padding: 20px; display: none; }
-        .active { display: block; }
-
-        /* Style des Vignettes */
-        .piece-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 5px; background: #eee; border-radius: 8px; }
-        .vignette { width: 50px; height: 50px; background: #ddd; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+        /* Navigation & Header */
+        header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--lego-red); }
+        .nav-menu { display: flex; gap: 10px; background: #333; padding: 10px; justify-content: center; }
         
-        .btn { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
-        .btn-blue { background: var(--lego-blue); }
-        .btn-green { background: #237841; }
-        .btn-admin { background: #666; }
+        /* Layout */
+        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+        .card { background: white; border-radius: 12px; padding: 25px; shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #ddd; }
+        .section { display: none; }
+        .active { display: block; animation: fadeIn 0.5s; }
 
-        .admin-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        /* Composants */
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; text-transform: uppercase; }
+        .btn-red { background: var(--lego-red); color: white; }
+        .btn-blue { background: var(--lego-blue); color: white; }
+        .btn-green { background: #237841; color: white; }
+        .btn-outline { background: transparent; border: 2px solid #555; color: #555; }
+        
+        .piece-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .vignette-item { border: 1px solid #eee; padding: 10px; border-radius: 8px; text-align: center; background: #fff; }
+        .vignette-item img { width: 80px; height: 80px; object-fit: contain; }
+        
+        .price-box { background: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 5px solid var(--lego-blue); margin-top: 20px; }
+        .total-highlight { font-size: 1.5em; color: var(--lego-red); font-weight: bold; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="header">
-        <h2>LEGO SYSTEM PRO</h2>
-        <div id="user-tag">Session : 2026</div>
-    </div>
+<header>
+    <div style="font-weight: bold; font-size: 1.2em;">🧱 LEGO CLUB PRO <span id="user-display"></span></div>
+    <button class="btn btn-outline" style="color:white; border-color:white;" onclick="checkAdmin()">Admin 🔒</button>
+</header>
 
-    <div id="menu" class="section active">
-        <input type="text" id="member-name" placeholder="Votre Nom / Pseudo" style="width:94%; padding:15px; margin-bottom:10px;">
-        <button class="btn btn-blue" onclick="showSection('selection')">1. Sélectionner mes 11 pièces</button>
-        <button class="btn btn-green" onclick="genererBon()">2. Générer mon Bon de Commande</button>
-        <button class="btn btn-admin" onclick="checkAdmin()">Administration 🔒</button>
-    </div>
-
-    <div id="selection" class="section">
-        <h3>Ma Sélection (11 pièces)</h3>
-        <div id="list-container"></div>
-        <button class="btn btn-blue" onclick="saveSelection()">Enregistrer ma Sélection</button>
-        <button class="btn btn-admin" onclick="showSection('menu')">Retour</button>
-    </div>
-
-    <div id="admin" class="section">
-        <h3>Panneau de Contrôle Final</h3>
-        <div class="admin-controls">
-            <button class="btn btn-green" onclick="exportData()">Exporter CSV (BrickLink)</button>
-            <button class="btn btn-blue" onclick="importData()">Importer Sélection Finale</button>
-        </div>
-        <div id="stats-area" style="margin-top:20px; padding:10px; background:#f9f9f9; border:1px solid #ccc;">
-            <strong>Statistiques :</strong> <span id="total-orders">0</span> commandes en attente.
-        </div>
-        <button class="btn btn-admin" onclick="showSection('menu')">Quitter Admin</button>
-    </div>
+<div class="nav-menu">
+    <button class="btn btn-blue" onclick="showSection('selection-init')">1. Sélection (11 pièces)</button>
+    <button class="btn btn-blue" onclick="showSection('commande-finale')">2. Commande Finale</button>
 </div>
 
+<div class="container">
+
+    <div id="auth" class="section active card">
+        <h2>Bienvenue sur la Session 2026</h2>
+        <p>Entrez votre nom pour commencer votre sélection de pièces.</p>
+        <input type="text" id="member-name" placeholder="Votre Nom / Pseudo" style="width: 100%; padding: 15px; font-size: 1.1em; border: 2px solid #ddd; border-radius: 8px;">
+        <button class="btn btn-red" style="width:100%; margin-top:15px;" onclick="startSession()">Commencer</button>
+    </div>
+
+    <div id="selection-init" class="section card">
+        <h2>Ma Sélection de 11 Pièces</h2>
+        <p>Saisissez les références pour voir les vignettes.</p>
+        <div id="draft-list" class="piece-grid">
+            </div>
+        <button class="btn btn-green" style="width:100%; margin-top:20px;" onclick="saveDraft()">Valider ma Sélection</button>
+    </div>
+
+    <div id="commande-finale" class="section card">
+        <h2>Bon de Commande Final</h2>
+        <div id="final-catalogue">
+            </div>
+
+        <div class="price-box">
+            <div>Sous-total : <span id="st-val">0.00</span> €</div>
+            <div>Frais de gestion (7%) : <span id="frais-val">0.00</span> €</div>
+            <hr>
+            <div class="total-highlight">TOTAL FINAL : <span id="total-val">0.00</span> €</div>
+            <p id="budget-alert" style="color:red; display:none; font-weight:bold;">⚠️ Budget max (50€) dépassé !</p>
+        </div>
+        <button id="btn-valider-tout" class="btn btn-green" style="width:100%; margin-top:20px;" onclick="validerCommandeFinale()">Confirmer & Générer mon Bon</button>
+    </div>
+
+    <div id="admin-panel" class="section card">
+        <h2 style="color:var(--lego-red)">Dashboard Administrateur</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div class="vignette-item">
+                <h4>Import Catalogue</h4>
+                <input type="file" id="csv-import" accept=".csv">
+                <button class="btn btn-blue" onclick="processImport()">Uploader CSV</button>
+            </div>
+            <div class="vignette-item">
+                <h4>Export Global</h4>
+                <button class="btn btn-red" onclick="exportBricklink()">Fichier BrickLink</button>
+            </div>
+        </div>
+        <div id="admin-stats" style="margin-top:20px;">
+            </div>
+    </div>
+
+</div>
+
+
+
 <script>
-    // Initialisation des 11 lignes
-    const list = document.getElementById('list-container');
-    for(let i=1; i<=11; i++) {
-        list.innerHTML += `
-            <div class="piece-row">
-                <div class="vignette" id="vignette-${i}">IMG</div>
-                <input type="text" placeholder="Réf" id="ref-${i}" style="width:60px" oninput="updateVignette(${i})">
-                <select id="col-${i}" style="flex:1">
-                    <option>Black</option><option>White</option><option>Red</option><option>Blue</option>
-                </select>
-            </div>`;
-    }
+    let currentMember = "";
+    const BUDGET_MAX = 50.00;
 
     function showSection(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
 
-    function updateVignette(id) {
-        const ref = document.getElementById(`ref-${id}`).value;
-        const vig = document.getElementById(`vignette-${id}`);
+    function startSession() {
+        currentMember = document.getElementById('member-name').value;
+        if(!currentMember) return alert("Nom requis");
+        document.getElementById('user-display').innerText = `| Membre : ${currentMember}`;
+        showSection('selection-init');
+        initDraftGrid();
+    }
+
+    function initDraftGrid() {
+        const grid = document.getElementById('draft-list');
+        grid.innerHTML = "";
+        for(let i=1; i<=11; i++) {
+            grid.innerHTML += `
+                <div class="vignette-item">
+                    <img id="img-${i}" src="https://placehold.co/80x80?text=LEGO">
+                    <input type="text" placeholder="Réf ${i}" oninput="updateVignette(${i}, this.value)" style="width:80%; margin-top:5px;">
+                </div>`;
+        }
+    }
+
+    function updateVignette(id, ref) {
         if(ref.length > 2) {
-            // Ici on pourrait lier une image : bricklink.com/v2/catalog/catalogitem.page?P=${ref}
-            vig.innerHTML = `<img src="https://img.bricklink.com/ItemImage/PN/11/${ref}.png" style="width:100%" onerror="this.src='Lego'">`;
+            document.getElementById(`img-${id}`).src = `https://img.bricklink.com/ItemImage/PN/11/${ref}.png`;
         }
     }
 
     function checkAdmin() {
-        const p = prompt("Mot de passe :");
-        if(p === "admin123") showSection('admin');
+        const mdp = prompt("Mot de passe Admin :");
+        if(mdp === "LEGO2026") showSection('admin-panel');
+        else alert("Accès refusé");
     }
 
-    function genererBon() {
-    const nom = document.getElementById('member-name').value;
-    if (!nom) {
-        alert("Veuillez entrer votre nom avant de générer le bon !");
-        return;
-    }
-
-    // On récupère les données des 11 pièces
-    let lignesTableau = "";
-    for (let i = 1; i <= 11; i++) {
-        const ref = document.getElementById(`ref-${i}`).value || "---";
-        const col = document.getElementById(`col-${i}`).value;
-        const imgUrl = `https://img.bricklink.com/ItemImage/PN/11/${ref}.png`;
+    function validerCommandeFinale() {
+        // Logique de calcul finale
+        const st = parseFloat(document.getElementById('st-val').innerText);
+        const total = st * 1.07;
         
-        lignesTableau += `
-            <tr>
-                <td>${i}</td>
-                <td><img src="${imgUrl}" style="width:40px;" onerror="this.src='https://placehold.co/40x40?text=Lego'"></td>
-                <td><strong>${ref}</strong></td>
-                <td>${col}</td>
-                <td>[ ]</td>
-            </tr>`;
+        alert(`Commande enregistrée pour ${currentMember}.\nTotal : ${total.toFixed(2)}€ (incluant 7% de frais).\nVotre bon de commande est prêt !`);
+        // Ici appel vers app.py pour sauver en SQL
     }
 
-    // On ouvre une nouvelle fenêtre pour l'impression
-    const fenetreImpression = window.open('', '', 'height=800,width=600');
-    fenetreImpression.document.write(`
-        <html>
-            <head>
-                <title>Bon de Commande - ${nom}</title>
-                <style>
-                    body { font-family: sans-serif; padding: 40px; }
-                    .header { text-align: center; border-bottom: 3px solid #d1121b; padding-bottom: 20px; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-                    th { background-color: #f2f2f2; }
-                    .footer { margin-top: 50px; display: flex; justify-content: space-between; }
-                    .sign-box { border: 1px solid #000; width: 200px; height: 100px; padding: 10px; font-size: 0.8em; }
-                    @media print { .no-print { display: none; } }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>BON DE COMMANDE LEGO 2026</h1>
-                    <p>Membre : <strong>${nom.toUpperCase()}</strong> | Date : ${new Date().toLocaleDateString()}</p>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Aperçu</th>
-                            <th>Référence</th>
-                            <th>Couleur</th>
-                            <th>Reçu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${lignesTableau}
-                    </tbody>
-                </table>
-                <div class="footer">
-                    <div class="sign-box">Signature Membre :</div>
-                    <div class="sign-box">Validation Admin :</div>
-                </div>
-                <br>
-                <button class="no-print" onclick="window.print()" style="padding:10px 20px; background:#237841; color:white; border:none; cursor:pointer;">Imprimer le Bon</button>
-          
-    `);
-    fenetreImpression.document.close();
-}
-<div id="commande-finale" class="section">
-    <h3>Validation du Panier Final</h3>
-    <p style="font-size: 0.8em; color: #666;">Prix maximum autorisé : <span id="budget-max">50.00</span> €</p>
-    
-    <div id="liste-finale">
-        <div class="piece-row fixed">
-            <span>Fixe 1: Réf 3001 (0.20€)</span>
-            <input type="number" id="qte-f1" value="1" min="0" onchange="calculerTotal()">
-        </div>
-        <div class="piece-row special">
-            <span>TOP 1: Réf 4073 (0.05€)</span>
-            <input type="number" id="qte-top" value="0" min="0" onchange="calculerTotal()">
-        </div>
-    </div>
-
-    <div style="background: #eee; padding: 15px; margin-top: 15px; border-radius: 8px;">
-        <div>Sous-total : <span id="sous-total">0.00</span> €</div>
-        <div>Frais de gestion (7%) : <span id="frais">0.00</span> €</div>
-        <div style="font-weight:bold; color:var(--lego-red); font-size: 1.2em;">
-            PRIX TOTAL : <span id="prix-final">0.00</span> €
-        </div>
-    </div>
-
-    <button id="btn-valider-final" class="btn btn-green" onclick="validerEtEnvoyer()">Valider et Envoyer Récap</button>
-</div>
-
-<script>
-    const FRAIS_POURCENTAGE = 0.07;
-    const BUDGET_MAX = 50.00; // À définir par l'Admin
-
-    function calculerTotal() {
-        // Exemple simplifié de calcul
-        let st = (document.getElementById('qte-f1').value * 0.20) + 
-                 (document.getElementById('qte-top').value * 0.05);
-        
-        let f = st * FRAIS_POURCENTAGE;
-        let total = st + f;
-
-        document.getElementById('sous-total').innerText = st.toFixed(2);
-        document.getElementById('frais').innerText = f.toFixed(2);
-        document.getElementById('prix-final').innerText = total.toFixed(2);
-
-        // Alerte si dépassement budget
-        const btn = document.getElementById('btn-valider-final');
-        if (total > BUDGET_MAX) {
-            btn.style.background = "#ccc";
-            btn.disabled = true;
-            btn.innerText = "Budget Dépassé !";
-        } else {
-            btn.style.background = "var(--lego-green)";
-            btn.disabled = false;
-            btn.innerText = "Valider et Envoyer Récap";
-        }
-    }
-
-    function validerEtEnvoyer() {
-        const nom = document.getElementById('member-name').value;
-        const total = document.getElementById('prix-final').innerText;
-        
-        // Simule l'envoi d'un email ou message récapitulatif
-        alert(`Récapitulatif envoyé à l'adhérent : ${nom}\nTotal : ${total} € (incluant 7% de frais)`);
-        
-        // Ici, on déclenche l'impression du bon de commande finale
-        genererBon(); 
-    }
-
-<div class="card" style="border-left: 5px solid var(--lego-yellow);">
-    <h3>📊 Statistiques de la Session 2026</h3>
-    <div id="stats-summary" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center;">
-        <div style="background:#f9f9f9; padding:15px; border-radius:10px;">
-            <small>Total Collecté (Frais 7%)</small>
-            <div id="total-frais-club" style="font-size:1.5em; font-weight:bold; color:var(--lego-blue);">0.00 €</div>
-        </div>
-        <div style="background:#f9f9f9; padding:15px; border-radius:10px;">
-            <small>Volume d'Achat Global</small>
-            <div id="volume-global" style="font-size:1.5em; font-weight:bold;">0.00 €</div>
-        </div>
-        <div style="background:#f9f9f9; padding:15px; border-radius:10px;">
-            <small>Membre le plus Actif</small>
-            <div id="top-membre" style="font-size:1.1em; font-weight:bold; color:var(--lego-red);">--</div>
-        </div>
-    </div>
-</div>
-
-
+    // Fonctions d'interface pour l'admin...
 </script>
 </body>
 </html>
