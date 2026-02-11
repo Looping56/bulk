@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>LEGO Admin - Dashboard Pro</title>
+    <style>
+        :root { --lego-red: #d1121b; --lego-blue: #0055ad; --dark: #222; --bg: #f4f4f4; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; }
+        
+        /* Sidebar */
+        .sidebar { width: 250px; background: var(--dark); color: white; min-height: 100vh; padding: 20px; }
+        .sidebar h2 { color: var(--lego-red); font-size: 1.2em; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .nav-item { padding: 12px; cursor: pointer; border-radius: 5px; margin-bottom: 5px; transition: 0.3s; }
+        .nav-item:hover { background: #444; }
+
+        /* Main Content */
+        .main { flex: 1; padding: 30px; }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background: #f8f8f8; color: #666; font-size: 0.9em; }
+
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        .status-ok { background: #e6ffed; color: #237841; }
+        .status-alert { background: #ffeef0; color: #d1121b; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-blue { background: var(--lego-blue); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>LEGO MANAGER 2026</h2>
+    <div class="nav-item">📊 Dashboard Financier</div>
+    <div class="nav-item">📦 Catalogue & CSV</div>
+    <div class="nav-item">🏆 Statistiques Top 1</div>
+    <div class="nav-item" style="margin-top: 20px; color: #888;">⚙️ Paramètres MDP</div>
+</div>
+
+<div class="main">
+    <h1>Tableau de Bord Administrateur</h1>
+
+    <div class="card">
+        <h3>📥 Mise à jour du Catalogue (Fixes & Prix)</h3>
+        <p>Uploadez votre fichier CSV pour réinitialiser les 4 pièces fixes et les prix.</p>
+        <input type="file" id="csvFile" accept=".csv">
+        <button class="btn btn-blue" onclick="uploadCSV()">Lancer l'Importation</button>
+    </div>
+
+    <div class="card">
+        <h3>📈 Commandes des Adhérents (Sous-total + 7%)</h3>
+        <table id="tableCommandes">
+            <thead>
+                <tr>
+                    <th>Adhérent</th>
+                    <th>Date</th>
+                    <th>Sous-Total</th>
+                    <th>Frais (7%)</th>
+                    <th>Total TTC</th>
+                    <th>Statut Budget</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <div class="card" style="background: var(--lego-blue); color: white;">
+        <h3>🏆 Top 1 de la Communauté</h3>
+        <div id="topPieceDisplay" style="font-size: 1.5em; font-weight: bold;">
+            Calcul en cours...
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fonction pour l'Import CSV
+    function uploadCSV() {
+        let formData = new FormData();
+        let fileField = document.querySelector('#csvFile');
+
+        formData.append('file', fileField.files[0]);
+
+        fetch('/admin/import_csv', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            alert(result);
+            location.reload();
+        })
+        .catch(error => alert('Erreur:', error));
+    }
+
+    // Chargement du Dashboard au lancement
+    window.onload = function() {
+        fetch('/admin/dashboard')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#tableCommandes tbody');
+            data.forEach(c => {
+                let statusClass = (c.total_final > 50) ? 'status-alert' : 'status-ok';
+                let statusText = (c.total_final > 50) ? 'Budget Dépassé' : 'Conforme';
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${c.membre}</strong></td>
+                        <td>${c.date_commande}</td>
+                        <td>${c.sous_total.toFixed(2)} €</td>
+                        <td>${c.frais.toFixed(2)} €</td>
+                        <td><strong>${c.total_final.toFixed(2)} €</strong></td>
+                        <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            });
+        });
+    };
+</script>
+
+</body>
+</html>
