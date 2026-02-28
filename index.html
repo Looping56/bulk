@@ -28,11 +28,25 @@
         <button class="btn" onclick="connexion()">ENTRER DANS LE CLUB</button>
     </div>
 
-    <div id="view-content">
-        <h2 id="welcome-msg" style="color: var(--lego-blue);"></h2>
-        <div style="background: #e8f5e9; padding: 15px; border: 2px solid #2e7d32; border-radius: 10px;">
-            ✅ Connexion établie avec la base de données.
-        </div>
+    <div id="view-content" style="display:none;">
+    <h2 id="welcome-msg"></h2>
+    
+    <div id="admin-controls" style="display:none; background:#333; color:white; padding:20px; border-radius:10px; margin-bottom:20px;">
+        <h3>🛠 PANNEAU ADMINISTRATEUR</h3>
+        <p>Phase actuelle : <strong id="current-phase-display">...</strong></p>
+        <button class="btn" onclick="changerPhase('standard')">Ouvrir Phase 1 (Standard)</button>
+        <button class="btn" onclick="changerPhase('final')">Ouvrir Phase Finale (Baseplates)</button>
+        <button class="btn" style="background:red;" onclick="changerPhase('ferme')">Fermer les votes</button>
+        <div id="stats-participation" style="margin-top:15px; background:#444; padding:10px;"></div>
+    </div>
+
+    <div id="member-view">
+        <h3 id="phase-title">Chargement du catalogue...</h3>
+        <div id="catalogue-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;"></div>
+        <br>
+        <button class="btn" id="btn-valider" onclick="validerChoix()" style="background:var(--lego-red); color:white; width:100%;">VALIDER MA SÉLECTION ✅</button>
+    </div>
+</div>
         <p>Le catalogue sera bientôt disponible ici.</p>
     </div>
 </div>
@@ -44,80 +58,81 @@
     const _KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtaGhjdnhoanp2cG5jb2N0ZHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc0OTgsImV4cCI6MjA4Nzg2MzQ5OH0.q349gEHEsthu3gqshR8r45gV_9OiKC20qvei3mtpU0s"; 
     const sbClient = supabase.createClient(_URL, _KEY);
 
-    let utilisateurConnecte = null;
-    let selections = new Set();
+    let user = null;
+    let phaseActuelle = "";
 
     async function connexion() {
-        const nomInput = document.getElementById('login-nom').value.toUpperCase().trim();
-        const prenomInput = document.getElementById('login-prenom').value.trim();
+        const nom = document.getElementById('login-nom').value.toUpperCase().trim();
+        const prenom = document.getElementById('login-prenom').value.trim();
 
-        try {
-            const { data, error } = await sbClient
-                .from('membres')
-                .select('*')
-                .eq('nom', nomInput)
-                .eq('prenom', prenomInput)
-                .single();
+        const { data, error } = await sbClient.from('membres').select('*').eq('nom', nom).eq('prenom', prenom).single();
 
-            if (data) {
-                utilisateurConnecte = data;
-                document.getElementById('view-login').style.display = 'none';
-                document.getElementById('view-content').style.display = 'block';
-                document.getElementById('welcome-msg').innerText = "Bonjour " + data.prenom + " !";
-                
-                // On lance le chargement du catalogue une fois connecté
-                chargerCatalogue();
+        if (data) {
+            user = data;
+            document.getElementById('view-login').style.display = 'none';
+            document.getElementById('view-content').style.display = 'block';
+            document.getElementById('welcome-msg').innerText = "Bonjour " + data.prenom + " !";
+
+            // VÉRIFICATION DU RÔLE
+            if (user.est_admin) {
+                document.getElementById('admin-controls').style.display = 'block';
+                document.getElementById('member-view').style.display = 'none';
+                chargerStats();
             } else {
-                alert("Utilisateur non trouvé.");
+                getPhaseAndLoad();
             }
-        } catch (err) { alert("Erreur de connexion."); }
+        } else { alert("Membre non trouvé."); }
+    }
+
+    async function getPhaseAndLoad() {
+        const { data } = await sbClient.from('config').select('valeur').eq('cle', 'phase_actuelle').single();
+        phaseActuelle = data.valeur;
+        
+        if (phaseActuelle === 'ferme') {
+            document.getElementById('member-view').innerHTML = "<h3>Le catalogue est actuellement fermé.</h3>";
+        } else {
+            chargerCatalogue();
+        }
     }
 
     async function chargerCatalogue() {
-        // On récupère les pièces depuis Supabase
-        const { data: pieces, error } = await sbClient
-            .from('catalogue')
-            .select('*')
-            .order('reference', { ascending: true });
-
+        const typeFiltre = (phaseActuelle === 'final') ? 'baseplate' : 'standard';
+        document.getElementById('phase-title').innerText = (phaseActuelle === 'final') ? "🛒 Phase Finale (Max 4 plaques)" : "🧱 Phase 1 (Standard)";
+        
+        const { data: briques } = await sbClient.from('catalogue').select('*').eq('type_piece', typeFiltre);
+        
         const grid = document.getElementById('catalogue-grid');
-        grid.innerHTML = ""; // On vide le message de chargement
+        grid.innerHTML = briques.map(p => `
+            <div class="card" id="p-${p.id}" style="border:2px solid black; padding:10px; border-radius:10px;">
+                <small>${p.reference}</small><br>
+                <strong>${p.descriptif}</strong><br>
+                <button onclick="toggleSelection('${p.id}')">Choisir</button>
+            </div>
+        `).join('');
+    }
 
-        if (pieces) {
-            pieces.forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.id = "p-" + p.id;
-                card.innerHTML = `
-                    <div style="font-size:12px; color:#666;">Ref: ${p.reference}</div>
-                    <div style="font-weight:bold; margin:5px 0;">${p.descriptif}</div>
-                    <div style="color:var(--lego-red);">${p.prix} €</div>
-                    <button class="btn-select" onclick="toggleSelection('${p.id}')" id="btn-${p.id}">Choisir</button>
-                `;
-                grid.appendChild(card);
-            });
+    // FONCTION ADMIN POUR CHANGER LA PHASE
+    async function changerPhase(nouvellePhase) {
+        const { error } = await sbClient.from('config').update({ valeur: nouvellePhase }).eq('cle', 'phase_actuelle');
+        if (!error) {
+            alert("Phase mise à jour : " + nouvellePhase);
+            location.reload();
         }
     }
 
-    function toggleSelection(id) {
-        const btn = document.getElementById("btn-" + id);
-        if (selections.has(id)) {
-            selections.delete(id);
-            btn.innerText = "Choisir";
-            btn.style.background = "#eee";
-        } else {
-            if (selections.size >= 4) { // Exemple de limite
-                alert("Maximum 4 pièces atteint !");
-                return;
-            }
-            selections.add(id);
-            btn.innerText = "SÉLECTIONNÉ ✅";
-            btn.style.background = "#4CAF50";
-            btn.style.color = "white";
-        }
+    async function chargerStats() {
+        const { count: total } = await sbClient.from('membres').select('*', { count: 'exact', head: true }).eq('est_admin', false);
+        const { data: vus } = await sbClient.from('selections').select('membre_id');
+        const nbParticipants = new Set(vus.map(v => v.membre_id)).size;
+        
+        document.getElementById('stats-participation').innerHTML = `
+            Participations : ${nbParticipants} / ${total} membres 
+            <div style="width:100%; bg:#eee; height:10px;"><div style="width:${(nbParticipants/total)*100}%; background:green; height:100%;"></div></div>
+        `;
     }
 </script>
 
 </body>
 </html>
+
 
