@@ -2,155 +2,164 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEGO Club Manager Pro - 2026</title>
+    <title>LEGO Club Bulk 2026 - Système Complet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --lego-red: #d1121b; --lego-blue: #0055ad; --lego-yellow: #ffcf00; --dark: #222; --gray: #f4f4f4; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--gray); margin: 0; color: #333; }
+        :root { --lego-yellow: #FFD700; --lego-red: #D12229; --lego-blue: #0055BF; }
+        body { font-family: 'Arial Black', sans-serif; background: #eee; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; border: 5px solid #000; border-radius: 20px; padding: 20px; box-shadow: 10px 10px 0px #888; }
+        h1 { text-align: center; color: var(--lego-red); -webkit-text-stroke: 1px black; }
         
-        /* Navigation & Header */
-        header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--lego-red); }
-        .nav-menu { display: flex; gap: 10px; background: #333; padding: 10px; justify-content: center; }
-        
-        /* Layout */
-        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
-        .card { background: white; border-radius: 12px; padding: 25px; shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #ddd; }
-        .section { display: none; }
-        .active { display: block; animation: fadeIn 0.5s; }
+        .section { display: none; padding: 20px; }
+        .active { display: block; }
 
-        /* Composants */
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; text-transform: uppercase; }
+        /* Style des cartes */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .card { border: 3px solid black; padding: 10px; border-radius: 10px; text-align: center; transition: 0.2s; background: white; }
+        .card:hover { transform: scale(1.05); }
+        .selected { background: var(--lego-yellow) !important; border-color: var(--lego-red); }
+
+        /* Admin Box */
+        .admin-panel { background: #333; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .btn { padding: 10px 15px; cursor: pointer; border: 2px solid black; font-weight: bold; border-radius: 5px; margin: 5px; }
         .btn-red { background: var(--lego-red); color: white; }
-        .btn-blue { background: var(--lego-blue); color: white; }
-        .btn-green { background: #237841; color: white; }
-        .btn-outline { background: transparent; border: 2px solid #555; color: #555; }
-        
-        .piece-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
-        .vignette-item { border: 1px solid #eee; padding: 10px; border-radius: 8px; text-align: center; background: #fff; }
-        .vignette-item img { width: 80px; height: 80px; object-fit: contain; }
-        
-        .price-box { background: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 5px solid var(--lego-blue); margin-top: 20px; }
-        .total-highlight { font-size: 1.5em; color: var(--lego-red); font-weight: bold; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .btn-yellow { background: var(--lego-yellow); color: black; }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="font-weight: bold; font-size: 1.2em;">🧱 LEGO CLUB PRO <span id="user-display"></span></div>
-    <button class="btn btn-outline" style="color:white; border-color:white;" onclick="checkAdmin()">Admin 🔒</button>
-</header>
-
-<div class="nav-menu">
-    <button class="btn btn-blue" onclick="showSection('selection-init')">1. Sélection (11 pièces)</button>
-    <button class="btn btn-blue" onclick="showSection('commande-finale')">2. Commande Finale</button>
-</div>
-
 <div class="container">
+    <h1>🧱 CLUB LEGO : BULK 2026</h1>
 
-    <div id="auth" class="section active card">
-        <h2>Bienvenue sur la Session 2026</h2>
-        <p>Entrez votre nom pour commencer votre sélection de pièces.</p>
-        <input type="text" id="member-name" placeholder="Votre Nom / Pseudo" style="width: 100%; padding: 15px; font-size: 1.1em; border: 2px solid #ddd; border-radius: 8px;">
-        <button class="btn btn-red" style="width:100%; margin-top:15px;" onclick="startSession()">Commencer</button>
+    <div id="view-login" class="section active">
+        <center>
+            <input type="text" id="login-nom" placeholder="NOM" style="width:80%; padding:10px; margin:10px;"><br>
+            <input type="text" id="login-prenom" placeholder="Prénom" style="width:80%; padding:10px; margin:10px;"><br>
+            <button class="btn btn-yellow" onclick="connexion()">ENTRER DANS LE CLUB</button>
+        </center>
     </div>
 
-    <div id="selection-init" class="section card">
-        <h2>Ma Sélection de 11 Pièces</h2>
-        <p>Saisissez les références pour voir les vignettes.</p>
-        <div id="draft-list" class="piece-grid">
-            </div>
-        <button class="btn btn-green" style="width:100%; margin-top:20px;" onclick="saveDraft()">Valider ma Sélection</button>
-    </div>
-
-    <div id="commande-finale" class="section card">
-        <h2>Bon de Commande Final</h2>
-        <div id="final-catalogue">
-            </div>
-
-        <div class="price-box">
-            <div>Sous-total : <span id="st-val">0.00</span> €</div>
-            <div>Frais de gestion (7%) : <span id="frais-val">0.00</span> €</div>
-            <hr>
-            <div class="total-highlight">TOTAL FINAL : <span id="total-val">0.00</span> €</div>
-            <p id="budget-alert" style="color:red; display:none; font-weight:bold;">⚠️ Budget max (50€) dépassé !</p>
+    <div id="view-admin" class="section">
+        <div class="admin-panel">
+            <h3>🛠 CONTRÔLE ADMINISTRATEUR</h3>
+            <button class="btn btn-red" onclick="setPhase('ferme')">FERMER LES VOTES</button>
+            <button class="btn btn-yellow" onclick="setPhase('standard')">OUVRIR PHASE 1 (Standard)</button>
+            <button class="btn btn-yellow" onclick="setPhase('final')">OUVRIR PHASE FINALE (Baseplates)</button>
+            <p>Statut actuel : <span id="status-phase">...</span></p>
         </div>
-        <button id="btn-valider-tout" class="btn btn-green" style="width:100%; margin-top:20px;" onclick="validerCommandeFinale()">Confirmer & Générer mon Bon</button>
+        <div id="admin-stats"></div>
     </div>
 
-    <div id="admin-panel" class="section card">
-        <h2 style="color:var(--lego-red)">Dashboard Administrateur</h2>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="vignette-item">
-                <h4>Import Catalogue</h4>
-                <input type="file" id="csv-import" accept=".csv">
-                <button class="btn btn-blue" onclick="processImport()">Uploader CSV</button>
-            </div>
-            <div class="vignette-item">
-                <h4>Export Global</h4>
-                <button class="btn btn-red" onclick="exportBricklink()">Fichier BrickLink</button>
-            </div>
-        </div>
-        <div id="admin-stats" style="margin-top:20px;">
-            </div>
+    <div id="view-catalogue" class="section">
+        <h2 id="phase-title">Chargement...</h2>
+        <p id="instruction">Veuillez patienter...</p>
+        <div id="catalogue-grid" class="grid"></div>
+        <hr>
+        <button class="btn btn-red" style="width:100%; font-size:1.2em;" onclick="sauvegarderChoix()">ENREGISTRER MES CHOIX ✅</button>
     </div>
-
 </div>
-
-
 
 <script>
-    let currentMember = "";
-    const BUDGET_MAX = 50.00;
+    const _URL = "https://fmhhcvxhjzvpncoctdyg.supabase.co";
+    const _KEY = "sb_publishable_0OOuf2Lssvf5eLi-czlfnw_0PXoFOZL";
+    const supabase = supabase.createClient(_URL, _KEY);
 
-    function showSection(id) {
+    let user = null;
+    let currentPhase = 'ferme';
+    let selections = new Set();
+
+    // --- LOGIQUE DE CONNEXION ---
+    async function connexion() {
+        const nom = document.getElementById('login-nom').value.toUpperCase();
+        const prenom = document.getElementById('login-prenom').value;
+
+        const { data, error } = await supabase.from('membres').select('*')
+            .eq('nom', nom).eq('prenom', prenom).single();
+
+        if (data) {
+            user = data;
+            checkPhase();
+        } else {
+            alert("Membre inconnu. Vérifiez l'orthographe !");
+        }
+    }
+
+    // --- VÉRIFIER LA PHASE ACTIVE ---
+    async function checkPhase() {
+        const { data } = await supabase.from('config').select('valeur').eq('cle', 'phase_actuelle').single();
+        currentPhase = data.valeur;
+
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
 
-    function startSession() {
-        currentMember = document.getElementById('member-name').value;
-        if(!currentMember) return alert("Nom requis");
-        document.getElementById('user-display').innerText = `| Membre : ${currentMember}`;
-        showSection('selection-init');
-        initDraftGrid();
-    }
-
-    function initDraftGrid() {
-        const grid = document.getElementById('draft-list');
-        grid.innerHTML = "";
-        for(let i=1; i<=11; i++) {
-            grid.innerHTML += `
-                <div class="vignette-item">
-                    <img id="img-${i}" src="https://placehold.co/80x80?text=LEGO">
-                    <input type="text" placeholder="Réf ${i}" oninput="updateVignette(${i}, this.value)" style="width:80%; margin-top:5px;">
-                </div>`;
+        if (user.est_admin) {
+            document.getElementById('view-admin').classList.add('active');
+            document.getElementById('status-phase').innerText = currentPhase.toUpperCase();
+        } else {
+            if (currentPhase === 'ferme') {
+                alert("Le catalogue est actuellement fermé.");
+                location.reload();
+            } else {
+                document.getElementById('view-catalogue').classList.add('active');
+                chargerCatalogue();
+            }
         }
     }
 
-    function updateVignette(id, ref) {
-        if(ref.length > 2) {
-            document.getElementById(`img-${id}`).src = `https://img.bricklink.com/ItemImage/PN/11/${ref}.png`;
-        }
-    }
+    // --- CHARGER LE CATALOGUE SELON LA PHASE ---
+    async function chargerCatalogue() {
+        const typeRecherche = (currentPhase === 'final') ? 'baseplate' : 'standard';
+        document.getElementById('phase-title').innerText = (currentPhase === 'final') ? "PHASE FINALE : LES BASEPLATES" : "PHASE 1 : PIÈCES STANDARDS";
+        document.getElementById('instruction').innerText = (currentPhase === 'final') ? "Choisissez maximum 4 plaques." : "Sélectionnez vos briques favorites.";
 
-    function checkAdmin() {
-        const mdp = prompt("Mot de passe Admin :");
-        if(mdp === "LEGO2026") showSection('admin-panel');
-        else alert("Accès refusé");
-    }
-
-    function validerCommandeFinale() {
-        // Logique de calcul finale
-        const st = parseFloat(document.getElementById('st-val').innerText);
-        const total = st * 1.07;
+        const { data: pieces } = await supabase.from('catalogue').select('*').eq('type_piece', typeRecherche);
         
-        alert(`Commande enregistrée pour ${currentMember}.\nTotal : ${total.toFixed(2)}€ (incluant 7% de frais).\nVotre bon de commande est prêt !`);
-        // Ici appel vers app.py pour sauver en SQL
+        const grid = document.getElementById('catalogue-grid');
+        grid.innerHTML = "";
+        pieces.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.id = "p-" + p.id;
+            div.innerHTML = `<strong>${p.reference}</strong><br>${p.descriptif}<br><b>${p.prix}€</b>`;
+            div.onclick = () => toggleSelection(p.id);
+            grid.appendChild(div);
+        });
     }
 
-    // Fonctions d'interface pour l'admin...
+    function toggleSelection(id) {
+        const el = document.getElementById("p-"+id);
+        if (selections.has(id)) {
+            selections.delete(id);
+            el.classList.remove('selected');
+        } else {
+            if (currentPhase === 'final' && selections.size >= 4) {
+                alert("STOP ! Maximum 4 baseplates.");
+                return;
+            }
+            selections.add(id);
+            el.classList.add('selected');
+        }
+    }
+
+    async function sauvegarderChoix() {
+        const arrayData = Array.from(selections).map(id => ({
+            membre_id: user.id,
+            piece_id: id,
+            phase: currentPhase
+        }));
+
+        const { error } = await supabase.from('selections').insert(arrayData);
+        if (!error) {
+            alert("Merci ! Vos choix ont été enregistrés.");
+            location.reload();
+        }
+    }
+
+    // --- FONCTIONS ADMIN ---
+    async function setPhase(p) {
+        await supabase.from('config').update({ valeur: p }).eq('cle', 'phase_actuelle');
+        alert("Phase modifiée : " + p);
+        location.reload();
+    }
 </script>
 </body>
 </html>
