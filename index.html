@@ -2,198 +2,74 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>LEGO Club Bulk 2026 - Système Complet</title>
+    <title>LEGO Club Bulk 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --lego-yellow: #FFD700; --lego-red: #D12229; --lego-blue: #0055BF; }
-        body { font-family: 'Arial Black', sans-serif; background: #eee; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; border: 5px solid #000; border-radius: 20px; padding: 20px; box-shadow: 10px 10px 0px #888; }
-        h1 { text-align: center; color: var(--lego-red); -webkit-text-stroke: 1px black; }
-        
-        .section { display: none; padding: 20px; }
-        .active { display: block; }
-
-        /* Style des cartes */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .card { border: 3px solid black; padding: 10px; border-radius: 10px; text-align: center; transition: 0.2s; background: white; }
-        .card:hover { transform: scale(1.05); }
-        .selected { background: var(--lego-yellow) !important; border-color: var(--lego-red); }
-
-        /* Admin Box */
-        .admin-panel { background: #333; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .btn { padding: 10px 15px; cursor: pointer; border: 2px solid black; font-weight: bold; border-radius: 5px; margin: 5px; }
-        .btn-red { background: var(--lego-red); color: white; }
-        .btn-yellow { background: var(--lego-yellow); color: black; }
+        :root { --lego-yellow: #FFD700; --lego-red: #D12229; }
+        body { font-family: 'Arial Black', sans-serif; background: #eee; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; border: 5px solid black; border-radius: 20px; padding: 20px; text-align: center; }
+        input { padding: 10px; margin: 10px; border: 2px solid black; width: 80%; border-radius: 5px; }
+        .btn { padding: 15px 25px; cursor: pointer; border: 2px solid black; font-weight: bold; border-radius: 5px; background: var(--lego-yellow); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🧱 CLUB LEGO : BULK 2026</h1>
-
-    <div id="view-login" class="section active">
-        <center>
-            <input type="text" id="login-nom" placeholder="NOM" style="width:80%; padding:10px; margin:10px;"><br>
-            <input type="text" id="login-prenom" placeholder="Prénom" style="width:80%; padding:10px; margin:10px;"><br>
-            <button class="btn btn-yellow" onclick="connexion()">ENTRER DANS LE CLUB</button>
-        </center>
+    <h1>🧱 LEGO CLUB BULK 2026</h1>
+    
+    <div id="view-login">
+        <input type="text" id="login-nom" placeholder="NOM (ex: DUPONT)">
+        <input type="text" id="login-prenom" placeholder="Prénom">
+        <br>
+        <button class="btn" onclick="connexion()">ENTRER DANS LE CLUB</button>
     </div>
 
-    <div id="view-admin" class="section">
-        <div class="admin-panel">
-            <h3>🛠 CONTRÔLE ADMINISTRATEUR</h3>
-            <button class="btn btn-red" onclick="setPhase('ferme')">FERMER LES VOTES</button>
-            <button class="btn btn-yellow" onclick="setPhase('standard')">OUVRIR PHASE 1 (Standard)</button>
-            <button class="btn btn-yellow" onclick="setPhase('final')">OUVRIR PHASE FINALE (Baseplates)</button>
-            <p>Statut actuel : <span id="status-phase">...</span></p>
-        </div>
-        <div id="admin-stats"></div>
-    </div>
-
-    <div id="view-catalogue" class="section">
-        <h2 id="phase-title">Chargement...</h2>
-        <p id="instruction">Veuillez patienter...</p>
-        <div id="catalogue-grid" class="grid"></div>
-        <hr>
-        <button class="btn btn-red" style="width:100%; font-size:1.2em;" onclick="sauvegarderChoix()">ENREGISTRER MES CHOIX ✅</button>
+    <div id="view-content" style="display:none;">
+        <h2 id="welcome-msg"></h2>
+        <p>Connexion réussie ! Le catalogue s'affichera ici.</p>
     </div>
 </div>
 
 <script>
-    const _URL = "https://fmhhcvxhjzvpncoctdyg.supabase.co"; // VOTRE URL REELLE
-    const _KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtaGhjdnhoanp2cG5jb2N0ZHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc0OTgsImV4cCI6MjA4Nzg2MzQ5OH0.q349gEHEsthu3gqshR8r45gV_9OiKC20qvei3mtpU0s";// Assurez-vous d'utiliser la clé 'anon' et non 'service_role'
-    
-    // Correction de l'initialisation : on utilise 'supabase.createClient' 
-    // mais il ne faut pas que la constante porte le même nom que l'objet global
-    const clientSupabase = supabase.createClient(_URL, _KEY);
-    async function connexion() {
-        const nom = document.getElementById('login-nom').value.toUpperCase().trim();
-        const prenom = document.getElementById('login-prenom').value.trim();
+    // INITIALISATION
+    const _URL = "https://fmhhcvxhjzvpncoctdyg.supabase.co";
+    const _KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtaGhjdnhoanp2cG5jb2N0ZHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc0OTgsImV4cCI6MjA4Nzg2MzQ5OH0.q349gEHEsthu3gqshR8r45gV_9OiKC20qvei3mtpU0s"; // <--- VERIFIE BIEN CETTE CLE
+    const sbClient = supabase.createClient(_URL, _KEY);
 
-        console.log("Tentative de connexion pour :", nom, prenom);
+    async function connexion() {
+        console.log("Tentative de connexion...");
+        const nomInput = document.getElementById('login-nom').value.toUpperCase().trim();
+        const prenomInput = document.getElementById('login-prenom').value.trim();
+
+        if(!nomInput || !prenomInput) {
+            alert("Merci de remplir les deux champs.");
+            return;
+        }
 
         try {
             const { data, error } = await sbClient
                 .from('membres')
                 .select('*')
-                .eq('nom', nom)
-                .eq('prenom', prenom)
+                .eq('nom', nomInput)
+                .eq('prenom', prenomInput)
                 .single();
 
-            if (error) throw error;
-
-            if (data) {
-                user = data;
-                alert("Connexion réussie !");
-                checkPhase(); // Lance la suite du programme
+            if (error) {
+                console.error("Erreur Supabase:", error);
+                alert("Erreur : " + error.message);
+            } else if (data) {
+                document.getElementById('view-login').style.display = 'none';
+                document.getElementById('view-content').style.display = 'block';
+                document.getElementById('welcome-msg').innerText = "Bonjour " + data.prenom + " !";
             } else {
-                alert("Utilisateur non trouvé dans la base Supabase.");
+                alert("Utilisateur non trouvé.");
             }
         } catch (err) {
-            console.error("Erreur détaillée :", err);
-            alert("Erreur de connexion : " + err.message);
+            console.error("Erreur Critique:", err);
+            alert("Impossible de contacter la base de données.");
         }
-    let user = null;
-    let currentPhase = 'ferme';
-    let selections = new Set();
-
-    // --- LOGIQUE DE CONNEXION ---
-    async function connexion() {
-        const nom = document.getElementById('login-nom').value.toUpperCase();
-        const prenom = document.getElementById('login-prenom').value;
-
-        const { data, error } = await supabase.from('membres').select('*')
-            .eq('nom', nom).eq('prenom', prenom).single();
-
-        if (data) {
-            user = data;
-            checkPhase();
-        } else {
-            alert("Membre inconnu. Vérifiez l'orthographe !");
-        }
-    }
-
-    // --- VÉRIFIER LA PHASE ACTIVE ---
-    async function checkPhase() {
-        const { data } = await supabase.from('config').select('valeur').eq('cle', 'phase_actuelle').single();
-        currentPhase = data.valeur;
-
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-
-        if (user.est_admin) {
-            document.getElementById('view-admin').classList.add('active');
-            document.getElementById('status-phase').innerText = currentPhase.toUpperCase();
-        } else {
-            if (currentPhase === 'ferme') {
-                alert("Le catalogue est actuellement fermé.");
-                location.reload();
-            } else {
-                document.getElementById('view-catalogue').classList.add('active');
-                chargerCatalogue();
-            }
-        }
-    }
-
-    // --- CHARGER LE CATALOGUE SELON LA PHASE ---
-    async function chargerCatalogue() {
-        const typeRecherche = (currentPhase === 'final') ? 'baseplate' : 'standard';
-        document.getElementById('phase-title').innerText = (currentPhase === 'final') ? "PHASE FINALE : LES BASEPLATES" : "PHASE 1 : PIÈCES STANDARDS";
-        document.getElementById('instruction').innerText = (currentPhase === 'final') ? "Choisissez maximum 4 plaques." : "Sélectionnez vos briques favorites.";
-
-        const { data: pieces } = await supabase.from('catalogue').select('*').eq('type_piece', typeRecherche);
-        
-        const grid = document.getElementById('catalogue-grid');
-        grid.innerHTML = "";
-        pieces.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.id = "p-" + p.id;
-            div.innerHTML = `<strong>${p.reference}</strong><br>${p.descriptif}<br><b>${p.prix}€</b>`;
-            div.onclick = () => toggleSelection(p.id);
-            grid.appendChild(div);
-        });
-    }
-
-    function toggleSelection(id) {
-        const el = document.getElementById("p-"+id);
-        if (selections.has(id)) {
-            selections.delete(id);
-            el.classList.remove('selected');
-        } else {
-            if (currentPhase === 'final' && selections.size >= 4) {
-                alert("STOP ! Maximum 4 baseplates.");
-                return;
-            }
-            selections.add(id);
-            el.classList.add('selected');
-        }
-    }
-
-    async function sauvegarderChoix() {
-        const arrayData = Array.from(selections).map(id => ({
-            membre_id: user.id,
-            piece_id: id,
-            phase: currentPhase
-        }));
-
-        const { error } = await supabase.from('selections').insert(arrayData);
-        if (!error) {
-            alert("Merci ! Vos choix ont été enregistrés.");
-            location.reload();
-        }
-    }
-
-    // --- FONCTIONS ADMIN ---
-    async function setPhase(p) {
-        await supabase.from('config').update({ valeur: p }).eq('cle', 'phase_actuelle');
-        alert("Phase modifiée : " + p);
-        location.reload();
     }
 </script>
+
 </body>
-
 </html>
-
-
-
-
