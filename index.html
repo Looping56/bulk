@@ -61,11 +61,11 @@
 
 <script>
     const _URL = "https://fmhhcvxhjzvpncoctdyg.supabase.co"; // VOTRE URL REELLE
-    const _KEY = "sb_publishable_0OOuf2Lssvf5eLi-czlfnw_0PXoFOZL";// Assurez-vous d'utiliser la clé 'anon' et non 'service_role'
+    const _KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtaGhjdnhoanp2cG5jb2N0ZHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc0OTgsImV4cCI6MjA4Nzg2MzQ5OH0.q349gEHEsthu3gqshR8r45gV_9OiKC20qvei3mtpU0s";// Assurez-vous d'utiliser la clé 'anon' et non 'service_role'
     
     // Correction de l'initialisation : on utilise 'supabase.createClient' 
     // mais il ne faut pas que la constante porte le même nom que l'objet global
-    const clientSupabase = supabase.createClient(SB_URL, SB_KEY);
+    const clientSupabase = supabase.createClient(_URL, _KEY);
     async function connexion() {
         const nom = document.getElementById('login-nom').value.toUpperCase().trim();
         const prenom = document.getElementById('login-prenom').value.trim();
@@ -193,6 +193,7 @@
 </body>
 
 </html>
+
 
 
 
