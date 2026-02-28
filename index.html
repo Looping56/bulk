@@ -61,9 +61,39 @@
 
 <script>
     const _URL = "https://fmhhcvxhjzvpncoctdyg.supabase.co"; // VOTRE URL REELLE
-    const _KEY = "sb_publishable_0OOuf2Lssvf5eLi-czlfnw_0PXoFOZL"; // VOTRE CLE REELLE
-    const supabase = supabase.createClient(_URL, _KEY);
+    const _KEY = "sb_publishable_Zk8vUZ-CoMt-DN6Ujs1uhw_JzPP861m";// Assurez-vous d'utiliser la clé 'anon' et non 'service_role'
+    
+    // Correction de l'initialisation : on utilise 'supabase.createClient' 
+    // mais il ne faut pas que la constante porte le même nom que l'objet global
+    const sbClient = supabase.createClient(_URL, _KEY);
 
+    async function connexion() {
+        const nom = document.getElementById('login-nom').value.toUpperCase().trim();
+        const prenom = document.getElementById('login-prenom').value.trim();
+
+        console.log("Tentative de connexion pour :", nom, prenom);
+
+        try {
+            const { data, error } = await sbClient
+                .from('membres')
+                .select('*')
+                .eq('nom', nom)
+                .eq('prenom', prenom)
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                user = data;
+                alert("Connexion réussie !");
+                checkPhase(); // Lance la suite du programme
+            } else {
+                alert("Utilisateur non trouvé dans la base Supabase.");
+            }
+        } catch (err) {
+            console.error("Erreur détaillée :", err);
+            alert("Erreur de connexion : " + err.message);
+        }
     let user = null;
     let currentPhase = 'ferme';
     let selections = new Set();
@@ -164,3 +194,4 @@
 </body>
 
 </html>
+
